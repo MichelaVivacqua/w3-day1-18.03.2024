@@ -1,0 +1,92 @@
+L'esercizio è mirato a approfondire le competenza nell’uso del DQL per l’estrazione di dati dal database impiegando costrutti avanzati
+
+Esercizio
+Si realizzi un database che abbia la seguente struttura (in grassetto le chiavi primarie):
+
+Clienti (NumeroCliente, Nome, Cognome, Anno di Nascita, RegioneResidenza);
+
+Prodotti (IdProdotto, Descrizione, InProduzione, InCommercio,  DataAttivazione, DataDisattivazione);
+
+Fornitori (NumeroFornitore, Denominazione, RegioneResidenza);
+
+Fatture (NumeroFattura, Tipologia, Importo, Iva, IdCliente, DataFattura, NumeroFornitore);
+
+
+
+
+Una volta realizzato il db, scrivere le queries necessarie ad eseguire le seguenti estrazioni di dati:
+
+-Estrai tutti i clienti con nome Mario:
+SELECT * from clienti WHERE clienti.nome = 'mario';
+
+
+-Estrarre il nome e il cognome dei clienti nati nel 1982:
+SELECT nome, cognome
+from clienti WHERE clienti.annodinascita = '1982';
+
+
+-Estrarre il numero delle fatture con iva al 20%:
+SELECT numerofattura
+from fatture WHERE fatture.iva = 20
+
+
+-Estrarre i prodotti attivati nel 2017 e che sono in produzione oppure in commercio (Per estrarre l’anno da una data si può usare EXTRACT(YEAR FROM data):
+SELECT * FROM prodotti WHERE EXTRACT(YEAR FROM dataattivazione) = 2017;
+
+
+-Estrarre le fatture con importo inferiore a 1000 e i dati dei clienti ad esse collegate:
+SELECT fatture.*, clienti.*
+FROM fatture
+JOIN clienti ON fatture.numerocliente = clienti.numerocliente
+WHERE fatture.importo < 1000;
+
+
+-Riportare l’elenco delle fatture (numero, importo, iva e data) con in aggiunta il nome del fornitore:
+SELECT fatture.numerofattura, fatture.importo, fatture.iva, fatture.datafattura, fornitori.numerofornitore , fornitori.denominazione
+FROM fatture
+JOIN fornitori ON fatture.numerofornitore = fornitori.numerofornitore;
+
+
+-Considerando soltanto le fatture con iva al 20 per cento, estrarre il numero di fatture per ogni anno (Per estrarre l’anno da una data si può usare EXTRACT(YEAR FROM data):
+SELECT EXTRACT(YEAR FROM datafattura) AS anno, COUNT(numerofattura) 
+FROM fatture
+WHERE iva = 20
+GROUP BY anno;
+
+
+
+-Riportare il numero di fatture e la somma dei relativi importi divisi per anno di fatturazione:
+SELECT EXTRACT(YEAR FROM datafattura) AS anno,
+       COUNT(numerofattura) AS numero_fatture,
+       SUM(importo) AS somma_importi
+FROM fatture
+GROUP BY anno;
+
+
+
+-[EXTRA] Estrarre gli anni in cui sono state registrate più di 2 fatture con tipologia ‘A’:
+SELECT EXTRACT(YEAR FROM datafattura) AS anno
+FROM fatture
+WHERE tipologia = 'A'
+GROUP BY anno
+HAVING COUNT(numerofattura) >= 2;
+
+
+
+[EXTRA] Estrarre il totale degli importi delle fatture divisi per residenza dei clienti:
+SELECT clienti.regioneresidenza, SUM(fatture.importo) AS totale_importi
+FROM fatture
+JOIN clienti ON fatture.numerocliente = clienti.numerocliente
+GROUP BY clienti.regioneresidenza;
+
+
+
+[EXTRA] Estrarre il numero dei clienti nati nel 1980 che hanno almeno una fattura superiore a 50 euro:
+SELECT COUNT(DISTINCT clienti.numerocliente) AS numero_clienti
+FROM clienti
+INNER JOIN fatture ON clienti.numerocliente = fatture.numerocliente
+WHERE clienti.annodinascita = 1980
+AND fatture.importo > 50;
+
+
+
